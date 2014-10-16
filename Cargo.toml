@@ -1,0 +1,21 @@
+[package]
+
+name = "scan_obj"
+version = "0.0.1"
+authors = ["Daniel Keep <daniel.keep@gmail.com>"]
+
+[dependencies.scan]
+
+git = "https://github.com/DanielKeep/rust-scan.git"
+
+[dependencies.scan_util]
+
+git = "https://github.com/DanielKeep/rust-scan-util.git"
+
+[dependencies.docopt_macros]
+
+git = "git://github.com/docopt/docopt.rs"
+
+[dependencies.docopt]
+
+git = "git://github.com/docopt/docopt.rs"
