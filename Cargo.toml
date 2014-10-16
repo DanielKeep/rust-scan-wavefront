@@ -11,11 +11,3 @@ git = "https://github.com/DanielKeep/rust-scan.git"
 [dependencies.scan_util]
 
 git = "https://github.com/DanielKeep/rust-scan-util.git"
-
-[dependencies.docopt_macros]
-
-git = "git://github.com/docopt/docopt.rs"
-
-[dependencies.docopt]
-
-git = "git://github.com/docopt/docopt.rs"

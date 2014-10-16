@@ -1,22 +1,17 @@
-#![allow(non_snake_case)]
-#![feature(phase)]
-
 extern crate serialize;
-
-#[phase(plugin)] extern crate docopt_macros;
-extern crate docopt;
 extern crate scan_obj;
 
-use docopt::FlagParser;
-
-docopt! { Args, "
-Usage: obj2json FILE
-"}
-
 fn main() {
-	let args: Args = FlagParser::parse().unwrap_or_else(|e| e.exit());
+	let args = std::os::args();
+	if args.len() != 2 {
+		println!("usage: obj2json FILE");
+		std::os::set_exit_status(1);
+		return;
+	}
 
-	let mut file_rd = std::io::fs::File::open(&std::path::Path::new(args.arg_FILE.as_slice())).unwrap();
+	let arg_file = args[1].as_slice();
+
+	let mut file_rd = std::io::fs::File::open(&std::path::Path::new(arg_file)).unwrap();
 	let mut obj_stmts = vec![];
 
 	for stmt in scan_obj::ObjScanner::new(&mut file_rd) {
