@@ -1,5 +1,7 @@
 # rust-scan-wavefront
 
+[![Build Status](https://travis-ci.org/DanielKeep/rust-scan-wavefront.svg?branch=master)](https://travis-ci.org/DanielKeep/rust-scan-wavefront)
+
 This is a simple Wavefront OBJ scanner, built as a test for the [`rust-scan`](https://github.com/DanielKeep/rust-scan.git) library.
 
 It currently scans most of a standard version 3.0 OBJ file, with the exception of the superceded directives and anything to do with `call`, `csh` or variable substitution, because I couldn't find any substantiative documentation for them.
