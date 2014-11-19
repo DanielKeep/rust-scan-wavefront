@@ -52,12 +52,20 @@ fn main() {
 }
 ```
 */
+#![feature(globs)]
 #![feature(if_let)]
 #![feature(phase)]
 
 extern crate serialize;
 #[phase(plugin)] extern crate scan;
 extern crate scan_util;
+
+pub use self::ObjStatement::*;
+pub use self::IsRational::{Rational, Irrational};
+pub use self::CSType::{BasisMatrix, Bezier, BSpline, Cardinal, Taylor};
+pub use self::Direction::{InU, InV};
+pub use self::CurveApprox::{CurveConstParam, CurveConstSpace, CurveCurvatureDep};
+pub use self::SurfaceApprox::{SurfConstParam, SurfConstSpace, SurfCurvatureDep};
 
 use std::io::IoResult;
 use scan_util::{ScanResult, ScanIoError};
