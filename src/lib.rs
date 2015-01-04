@@ -53,10 +53,10 @@ fn main() {
 ```
 */
 #![feature(globs)]
-#![feature(if_let)]
+#![feature(old_orphan_check)] // 2015-01-04: For encodable/decodable, because associated types aren't fully baked yet.  As for the warning, rustc can go shove it up its ass: there *is no* way to rewrite this code yet, *jerk*.
 #![feature(phase)]
 
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 #[phase(plugin)] extern crate scan;
 extern crate scan_util;
 
@@ -67,6 +67,7 @@ pub use self::Direction::{InU, InV};
 pub use self::CurveApprox::{CurveConstParam, CurveConstSpace, CurveCurvatureDep};
 pub use self::SurfaceApprox::{SurfConstParam, SurfConstSpace, SurfCurvatureDep};
 
+use std::borrow::ToOwned;
 use std::io::IoResult;
 use scan_util::{ScanResult, ScanIoError};
 
@@ -118,7 +119,7 @@ Yield the next `ObjStatement`.  If an IO or scanning error occurs, you will get 
 /**
 This enumeration represents every supported OBJ statement.  Each variant is a direct translation from the file.  This means, for example, that vertex references are raw integers and are not checked for validity.
 */
-#[deriving(Decodable, Encodable, PartialEq, Show)]
+#[derive(PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub enum ObjStatement {
 	ObjVertex(f64, f64, f64, f64),
 	ObjVertexTexture(f64, f64, f64),
@@ -172,7 +173,7 @@ pub type DataRef = int;
 /**
 Is a curve or surface rational?
 */
-#[deriving(Decodable, Encodable, Eq, PartialEq, Show)]
+#[derive(Copy, Eq, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub enum IsRational {
 	Rational,
 	Irrational,
@@ -186,7 +187,7 @@ scanner! { IsRational,
 /**
 The type of curve or surface.
 */
-#[deriving(Decodable, Encodable, Eq, PartialEq, Show)]
+#[derive(Copy, Eq, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub enum CSType {
 	BasisMatrix,
 	Bezier,
@@ -206,7 +207,7 @@ scanner! { CSType,
 /**
 This is used to encode the direction for basis matrices and parameters.
 */
-#[deriving(Decodable, Encodable, Eq, PartialEq, Show)]
+#[derive(Copy, Eq, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub enum Direction {
 	InU,
 	InV,
@@ -220,7 +221,7 @@ scanner! { Direction,
 /**
 A pair of references, used to specify a vertex and texture coordinate.
 */
-#[deriving(Decodable, Encodable, Eq, PartialEq, Show)]
+#[derive(Copy, Eq, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub struct DataPair {
 	pub v_ref: DataRef,
 	pub vt_ref: Option<DataRef>,
@@ -237,7 +238,7 @@ scanner! { DataPair,
 /**
 A triple of references, used to specify a vertex, texture coordinate and vertex normal.
 */
-#[deriving(Decodable, Encodable, Eq, PartialEq, Show)]
+#[derive(Copy, Eq, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub struct DataTriple {
 	pub v_ref: DataRef,
 	pub vt_ref: Option<DataRef>,
@@ -261,7 +262,7 @@ scanner! { DataTriple,
 /**
 A reference to a curve, along with start and end parameters.
 */
-#[deriving(Decodable, Encodable, PartialEq, Show)]
+#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub struct CurveRef(pub f64, pub f64, pub DataRef);
 
 scanner! { CurveRef,
@@ -271,7 +272,7 @@ scanner! { CurveRef,
 /**
 A reference to a surface, start and end parameters, and a curve.
 */
-#[deriving(Decodable, Encodable, PartialEq, Show)]
+#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub struct SurfaceRef {
 	pub surf: DataRef,
 	pub q0: f64,
@@ -291,7 +292,7 @@ scanner! { SurfaceRef,
 /**
 Approximation to be used for drawing a curve.
 */
-#[deriving(Decodable, Encodable, PartialEq, Show)]
+#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub enum CurveApprox {
 	CurveConstParam(uint),
 	CurveConstSpace(f64),
@@ -307,7 +308,7 @@ scanner! { CurveApprox,
 /**
 Approximation to be used for drawing a surface.
 */
-#[deriving(Decodable, Encodable, PartialEq, Show)]
+#[derive(Copy, PartialEq, RustcDecodable, RustcEncodable, Show)]
 pub enum SurfaceApprox {
 	SurfConstParam(uint, uint),
 	SurfConstSpace(f64),
@@ -332,7 +333,7 @@ pub fn read_obj_line<R: Reader>(r: &mut R) -> IoResult<String> {
 	loop {
 		let mut line = try!(::scan_util::io::read_line(r));
 		{
-			let line_nonl_len = line.as_slice().trim_right_chars(NEWLINES).len();
+			let line_nonl_len = line.as_slice().trim_right_matches(NEWLINES).len();
 			line.truncate(line_nonl_len);
 		}
 		if line.as_slice().ends_with("\\") {
@@ -387,7 +388,7 @@ pub fn scan_obj_line(s: &str) -> ScanResult<Option<ObjStatement>> {
 		"g" [gs]+ => Some(ObjGroups(gs)),
 		"s" (sg|"off") => Some(ObjSmoothingGroup(sg.unwrap_or(0))),
 		"mg" (("0" | "off") res | sg res) => Some(ObjMergingGroup(sg.unwrap_or(0), res)),
-		"o", ..name => Some(ObjObjectName(name.trim_left().into_string())),
+		"o", ..name => Some(ObjObjectName(name.trim_left().to_owned())),
 
 		"bevel" on:OnOff => Some(ObjBevelInterp(on.to_bool())),
 		"c_interp" on:OnOff => Some(ObjColorInterp(on.to_bool())),
@@ -415,6 +416,7 @@ pub fn scan_obj_line(s: &str) -> ScanResult<Option<ObjStatement>> {
 /*
 This is a little helper to pase "on" and "off" as bools.
 */
+#[derive(Copy)]
 struct OnOff(bool);
 
 impl OnOff {

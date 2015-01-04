@@ -1,4 +1,4 @@
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate scan_obj;
 
 fn main() {
@@ -18,6 +18,6 @@ fn main() {
 		obj_stmts.push(stmt.unwrap());
 	}
 
-	let jsoned = serialize::json::encode(&obj_stmts);
+	let jsoned = rustc_serialize::json::encode(&obj_stmts);
 	print!("{}", jsoned);
 }
